@@ -1,3 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor
+
 # This code works but is very long, and I didn't know how to make it finish in a reasonable time.
 # So this code isn't finished, but I think it's the right way to do it.
 
@@ -277,27 +279,35 @@ def transformInt(l):
                 sub[i] = int(sub[i])
     return l
 
-def traiterSeed(seed, ranges):
-    for type in ranges:
-        for oneRange in type:
-            plageDest = oneRange[0]
-            plageSource = oneRange[1]
-            if seed in range(plageSource[0], plageSource[1]):
-                seed = plageDest[0] + (seed - plageSource[0])
-                return seed
-    return seed
-
 def genererRangesTransfos(ranges):
-    result = []
-    for type in ranges:
-        resultType = []
-        for oneRange in type:
-            plageDest = (oneRange[0], oneRange[0] + oneRange[2])
-            plageSource = (oneRange[1], oneRange[1] + oneRange[2])
-            resultOneRange = (plageDest, plageSource)
-            resultType.append(resultOneRange)
-        result.append(resultType)
-    return result
+   result = []
+   for type in ranges:
+       resultType = {}
+       for oneRange in type:
+           plageDest = (oneRange[0], oneRange[0] + oneRange[2])
+           plageSource = (oneRange[1], oneRange[1] + oneRange[2])
+           resultType[plageDest] = plageSource
+       result.append(resultType)
+   return result
+
+def traiterSeed(seed, ranges):
+   for type in ranges:
+       for rangeDep, rangeArrivee in type.items():
+           if seed >= rangeDep[0] and seed < rangeDep[1]:
+               seed = rangeArrivee[0] + (seed - rangeDep[0])
+               return seed
+   return seed
+
+def calcul(ranges, mapList):
+  min = ranges[0][0]
+  for oneRange in ranges:
+      for i in range(oneRange[0], oneRange[0]+oneRange[1]+1, 100):
+          print(i)
+          c = traiterSeed(i, mapList)
+          if c < min:
+              min = c
+  return min
+
 
 
 
@@ -305,17 +315,8 @@ def generateSeedRanges(seedsString):
     l = seedsString.split(" ")
     return [(int(l[indice]), int(l[indice+1])) for indice in range(0, len(l), 2)]
 
-def calcul(ranges, mapList):
-    min = ranges[0][0]
-    for r in ranges:
-        for i in range(r[0],r[0]+r[1]+1):
-            c = traiterSeed(i, mapList)
-            if c < min:
-                min = c
-    return min
-
 
 mapLines, seedsString = parse_data(data)
 ranges = generateSeedRanges(seedsString)
 mapList = genererRangesTransfos(mapLines)
-print(calcul(ranges, mapList))
+print("SOlution", calcul(ranges, mapList))
